@@ -1,4 +1,5 @@
-# INDICE
+# INDICE (incontrl.io) ![alt text](https://github.com/indice-co/Incontrl.Net/blob/master/icon/icon-64.png?raw=true "Incontrl logo")
+
 
 ## intro TODO 
 We are devoloping a worker (Console app) that will 
