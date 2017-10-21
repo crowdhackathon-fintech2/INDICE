@@ -103,7 +103,8 @@ namespace Incontrl.Console
             }); 
             await subscriptionApi.Invoices().CreateAsync(new CreateInvoiceRequest {
                 CurrencyCode = "EUR",
-                Date = DateTime.Now.AddHours(-2),
+                Date = DateTime.Now.AddSeconds(-4),
+                Status = InvoiceStatus.Issued,
                 Recipient = new Recipient { Organisation = company },
                 Lines = new List<InvoiceLine> {
                     new InvoiceLine { Description = "This is a Nice expensive item", DiscountRate = 0.5, UnitAmount = 450, Product = product }
@@ -111,7 +112,8 @@ namespace Incontrl.Console
             });
             await subscriptionApi.Invoices().CreateAsync(new CreateInvoiceRequest {
                 CurrencyCode = "EUR",
-                Date = DateTime.Now.AddHours(-1),
+                Date = DateTime.Now.AddHours(-2),
+                Status = InvoiceStatus.Issued,
                 Recipient = new Recipient { Organisation = company },
                 Lines = new List<InvoiceLine> {
                     new InvoiceLine { Description = "This is a Nice expensive item 2", DiscountRate = 0.5, UnitAmount = 450, Product = product, Quantity = 2 }
@@ -120,13 +122,14 @@ namespace Incontrl.Console
             var incoive = await subscriptionApi.Invoices().CreateAsync(new CreateInvoiceRequest {
                 CurrencyCode = "EUR",
                 Date = DateTime.Now,
+                Status = InvoiceStatus.Issued,
                 Recipient = new Recipient { Organisation = company },
                 Lines = new List<InvoiceLine> {
                     new InvoiceLine { Description = "This is a Nice expensive item 3", DiscountRate = 0.5, UnitAmount = 450, Product = product, Quantity = 0.5 }
                 }
             });
             
-            var invoices = await subscriptionApi.Invoices().ListAsync(new ListOptions<InvoiceListFilter> { Size = 3 });
+            var invoices = await subscriptionApi.Invoices().ListAsync(new ListOptions<InvoiceListFilter> { Size = 3, Sort = "Date-" });
             foreach (var invoice in invoices.Items) {
                 var cmd = $"start microsoft-edge:http://api-vnext.incontrl.io/{invoice.PermaLink}";
             }
