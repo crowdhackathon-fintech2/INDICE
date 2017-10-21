@@ -109,16 +109,16 @@ namespace Incontrl.Console
                 Status = InvoiceStatus.Issued,
                 Recipient = new Recipient { Organisation = company },
                 Lines = new List<InvoiceLine> {
-                    new InvoiceLine { Description = "This is a Nice expensive item", DiscountRate = 0.5, UnitAmount = 450, Product = product }
+                    new InvoiceLine { Description = "This is a Nice expensive item", DiscountRate = 0.05, UnitAmount = 450, Product = product, Taxes = product.Taxes }
                 }
             });
             await subscriptionApi.Invoices().CreateAsync(new CreateInvoiceRequest {
                 CurrencyCode = "EUR",
-                Date = DateTime.Now.AddHours(-2),
+                Date = DateTime.Now.AddSeconds(-2),
                 Status = InvoiceStatus.Issued,
                 Recipient = new Recipient { Organisation = company },
                 Lines = new List<InvoiceLine> {
-                    new InvoiceLine { Description = "This is a Nice expensive item 2", DiscountRate = 0.5, UnitAmount = 450, Product = product, Quantity = 2 }
+                    new InvoiceLine { Description = "This is a Nice expensive item 2", DiscountRate = 0.05, UnitAmount = 450, Product = product, Taxes = product.Taxes, Quantity = 2 }
                 }
             });
             var incoive = await subscriptionApi.Invoices().CreateAsync(new CreateInvoiceRequest {
@@ -127,7 +127,7 @@ namespace Incontrl.Console
                 Status = InvoiceStatus.Issued,
                 Recipient = new Recipient { Organisation = company },
                 Lines = new List<InvoiceLine> {
-                    new InvoiceLine { Description = "This is a Nice expensive item 3", DiscountRate = 0.5, UnitAmount = 450, Product = product, Quantity = 0.5 }
+                    new InvoiceLine { Description = "This is a Nice expensive item 3", DiscountRate = 0.05, UnitAmount = 450, Product = product, Taxes = product.Taxes, Quantity = 0.5 }
                 }
             });
             
