@@ -71,7 +71,9 @@ namespace Incontrl.Console
                             provider = "NBG", provider_id = "NBG.gr",
                             user_id = "9d7f2ef4-7262-4429-a487-7979e4a76447",
                             username = "User1", sandbox_id = "inContrl",
-                            application_id = "inContrl", account_id = "2cebef85-bf5b-4d1d-8727-d4441750d21d"
+                            application_id = "inContrl", account_id = "2cebef85-bf5b-4d1d-8727-d4441750d21d",
+                            bank_id = "DB173089-A8FE-43F1-8947-F1B2A8699829",
+                            nbgApiUrl = "https://apis.nbg.gr/public/nbgapis/obp/v3.0.1"
                         }
                     }
                 });

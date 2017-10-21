@@ -50,8 +50,10 @@ namespace Incontrl.Provider.Concrete
             if (settings.account_id != null) {
                 account_id = settings.account_id;
             }
+            application_id = settings.application_id;
+
             _http = new HttpClient();
-            _http.BaseAddress = new Uri($"{nbgApiUrl}/my/banks/{bank_id}");
+            _http.BaseAddress = new Uri($"{nbgApiUrl}/my/banks/{bank_id}/");
             _http.DefaultRequestHeaders.Add("provider", provider);
             _http.DefaultRequestHeaders.Add("provider_id", provider_id);
             _http.DefaultRequestHeaders.Add("username", username);
@@ -62,7 +64,7 @@ namespace Incontrl.Provider.Concrete
         }
 
         public async Task<IEnumerable<BankTransaction>> GetTransactionsAsync(BankTransactionSearchDocument searchDoc) {           
-            var response = await _http.GetAsync($"/accounts/{account_id}/transactions");
+            var response = await _http.GetAsync($"accounts/{account_id}/transactions");
             var transactions = JsonConvert.DeserializeObject<IEnumerable<Transaction>>(await response.Content.ReadAsStringAsync());
             return MapToBankTransactions(transactions);
         }
