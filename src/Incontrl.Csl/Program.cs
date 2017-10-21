@@ -84,9 +84,25 @@ namespace Incontrl.Console
                     new Tax { Name = "VAT", Rate = 0.24M }
                 }
             });
+            var company = await subscriptionApi.Organisations().CreateAsync(new CreateOrganisationRequest {
+                Email = "support@indice.gr",
+                LegalName = "INDICE OE",
+                Name = "Indice",
+                LineOfBusiness = "Independent Software Vendor",
+                TaxCode = "GR99",
+                TaxOffice = "ΣΤ' ΑΘΗΝΩΝ",
+                Website = "http://www.indice.gr",
+                Address = new Address {
+                    CountryCode = "GR",
+                    Line1 = "22 Iakchou str.",
+                    City = "Athens",
+                    ZipCode = "11854"
+                }
+            }); 
             await subscriptionApi.Invoices().CreateAsync(new CreateInvoiceRequest {
                 CurrencyCode = "EUR",
                 Date = DateTime.Now.AddHours(-2),
+                Recipient = new Recipient { Organisation = company },
                 Lines = new List<InvoiceLine> {
                     new InvoiceLine { Description = "This is a Nice expensive item", DiscountRate = 0.5, UnitAmount = 450, Product = product }
                 }
@@ -94,6 +110,7 @@ namespace Incontrl.Console
             await subscriptionApi.Invoices().CreateAsync(new CreateInvoiceRequest {
                 CurrencyCode = "EUR",
                 Date = DateTime.Now.AddHours(-1),
+                Recipient = new Recipient { Organisation = company },
                 Lines = new List<InvoiceLine> {
                     new InvoiceLine { Description = "This is a Nice expensive item 2", DiscountRate = 0.5, UnitAmount = 450, Product = product, Quantity = 2 }
                 }
@@ -101,13 +118,16 @@ namespace Incontrl.Console
             var incoive = await subscriptionApi.Invoices().CreateAsync(new CreateInvoiceRequest {
                 CurrencyCode = "EUR",
                 Date = DateTime.Now,
+                Recipient = new Recipient { Organisation = company },
                 Lines = new List<InvoiceLine> {
                     new InvoiceLine { Description = "This is a Nice expensive item 3", DiscountRate = 0.5, UnitAmount = 450, Product = product, Quantity = 0.5 }
                 }
             });
-
-
-            var invoices = await subscriptionApi.Invoices().ListAsync();
+            
+            var invoices = await subscriptionApi.Invoices().ListAsync(new ListOptions<InvoiceListFilter> { Size = 3 });
+            foreach (var invoice in invoices.Items) {
+                var cmd = $"start microsoft-edge:http://api-vnext.incontrl.io/{invoice.PermaLink}";
+            }
 
             return subscription.Id.Value;
         }
