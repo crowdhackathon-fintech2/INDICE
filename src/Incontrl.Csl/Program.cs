@@ -20,8 +20,19 @@ namespace Incontrl.Console
             var clientSecret = configuration["Client:ClientSecret"];
             var baseApiAddress = configuration["BaseApiAddress"]; //http://api-vnext.incontrl.io
             var api = new IncontrlApi(clientId, clientSecret);
-            api.Configure("http://api-vnext.incontrl.io");
-            api.LoginAsync()
+            api.Configure(baseApiAddress);
+            //api.LoginAsync()
+
+            // i. create or get subscription
+            // ii. ensure bank account for the subscription
+            // iii. ensure invoices in subscription
+
+            //i. get bank accounts by subscriptionId
+            //ii. create provider concrete class through BankProviderFactory
+            //iii. get bank transactions by bank account
+            //iv. store bank transactions to our storage
+            //v. get invoices by subscriptionId
+            //vi. matching .....
         }
     }
 }
