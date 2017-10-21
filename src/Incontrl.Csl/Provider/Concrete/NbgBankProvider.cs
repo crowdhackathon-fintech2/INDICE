@@ -19,6 +19,7 @@ namespace Incontrl.Provider.Concrete
         private string username;
         private string nbgApiUrl;
         private string bank_id;
+        private string account_id;
         private HttpClient _http;
         private readonly JsonSerializerSettings _JsonSettings = new JsonSerializerSettings {
             ContractResolver = new CamelCasePropertyNamesContractResolver()
@@ -46,6 +47,9 @@ namespace Incontrl.Provider.Concrete
             if (settings.bank_id != null) {
                 bank_id = settings.bank_id;
             }
+            if (settings.account_id != null) {
+                account_id = settings.account_id;
+            }
             _http = new HttpClient();
             _http.BaseAddress = new Uri($"{nbgApiUrl}/my/banks/{bank_id}");
             _http.DefaultRequestHeaders.Add("provider", provider);
@@ -58,7 +62,7 @@ namespace Incontrl.Provider.Concrete
         }
 
         public async Task<IEnumerable<BankTransaction>> GetTransactionsAsync(BankTransactionSearchDocument searchDoc) {           
-            var response = await _http.GetAsync($"accounts/{searchDoc.AccountId}/transactions");
+            var response = await _http.GetAsync($"/accounts/{account_id}/transactions");
             var transactions = JsonConvert.DeserializeObject<IEnumerable<Transaction>>(await response.Content.ReadAsStringAsync());
             return MapToBankTransactions(transactions);
         }
