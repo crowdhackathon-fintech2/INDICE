@@ -83,7 +83,7 @@ namespace Incontrl.Console
                 Amount = 450,
                 Name = "My Precious",
                 Taxes = new List<Tax> {
-                    new Tax { Name = "VAT", Rate = 0.24M }
+                    new Tax { Name = "VAT", Rate = 0.24M, IsSalesTax = true }
                 }
             });
             await subscriptionApi.Invoices().CreateAsync(new CreateInvoiceRequest {
