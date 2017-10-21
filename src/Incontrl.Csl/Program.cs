@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Incontrl.Net;
@@ -52,15 +53,17 @@ namespace Incontrl.Console
             Subscription subscription = null;
             if (Guid.Empty.Equals(subscriptionGuid)) {
                 var subscriptionJson = File.ReadAllText(@"Resources\create_subscription.json");
-                var subscriptionRequest = Newtonsoft.Json.JsonConvert.DeserializeObject<Net.Models.CreateSubscriptionRequest>(subscriptionJson);
+                var subscriptionRequest = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateSubscriptionRequest>(subscriptionJson);
                 subscription = await api.Subscriptions().CreateAsync(subscriptionRequest);
             } else {
                 subscription = await api.Subscription(subscriptionGuid).GetAsync();
             }
+            var subscriptionApi = api.Subscription(subscription.Id.Value);
+
             // ii. ensure bank account for the subscription
-            ResultSet<BankAccount> bankAccounts = api.Subscription(subscription.Id.Value).BankAccounts().ListAsync().Result;
+            var bankAccounts = await subscriptionApi.BankAccounts().ListAsync();
             if (null == bankAccounts || 0 == bankAccounts.Count) {
-                var bankAccount = await api.Subscription(subscription.Id.Value).BankAccounts().CreateAsync(new BankAccount {
+                var bankAccount = await subscriptionApi.BankAccounts().CreateAsync(new BankAccount {
                     Bank = "NBG", Baseline = new Balance { Amount = 1000, Date = DateTime.Now }, Code = "1234", Name = "Main Bank Account", Number = "edw tha paei to iban",
                     Provider = new TransactionProviderConfig {
                         Name = "nbg",
@@ -76,6 +79,37 @@ namespace Incontrl.Console
                 });
             }
             // iii. ensure invoices in subscription
+            var product = await subscriptionApi.Products().CreateAsync(new CreateProductRequest {
+                Amount = 450,
+                Name = "My Precious",
+                Taxes = new List<Tax> {
+                    new Tax { Name = "VAT", Rate = 0.24M }
+                }
+            });
+            await subscriptionApi.Invoices().CreateAsync(new CreateInvoiceRequest {
+                CurrencyCode = "EUR",
+                Date = DateTime.Now.AddHours(-2),
+                Lines = new List<InvoiceLine> {
+                    new InvoiceLine { Description = "This is a Nice expensive item", DiscountRate = 0.5, UnitAmount = 450, Product = product }
+                }
+            });
+            await subscriptionApi.Invoices().CreateAsync(new CreateInvoiceRequest {
+                CurrencyCode = "EUR",
+                Date = DateTime.Now.AddHours(-1),
+                Lines = new List<InvoiceLine> {
+                    new InvoiceLine { Description = "This is a Nice expensive item 2", DiscountRate = 0.5, UnitAmount = 450, Product = product, Quantity = 2 }
+                }
+            });
+            var incoive = await subscriptionApi.Invoices().CreateAsync(new CreateInvoiceRequest {
+                CurrencyCode = "EUR",
+                Date = DateTime.Now,
+                Lines = new List<InvoiceLine> {
+                    new InvoiceLine { Description = "This is a Nice expensive item 3", DiscountRate = 0.5, UnitAmount = 450, Product = product, Quantity = 0.5 }
+                }
+            });
+
+
+            var invoices = await subscriptionApi.Invoices().ListAsync();
 
             return subscription.Id.Value;
         }
