@@ -155,7 +155,7 @@ namespace Incontrl.Console
 
                 var invoices = await subscriptionApi.Invoices().ListAsync(new ListOptions<InvoiceListFilter> { Size = 3, Sort = "Date-" });
                 foreach (var invoice in invoices.Items) {
-                    var url = $"http://api-vnext.incontrl.io/{invoice.PermaLink}";
+                    var url = $"{api.ApiAddress}/{invoice.PermaLink}";
                     OpenBrowser(url);
                 }
             }
