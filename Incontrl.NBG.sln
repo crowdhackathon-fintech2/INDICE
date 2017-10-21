@@ -9,7 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{82413185-5
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Incontrl.Console", "src\Incontrl.Console\Incontrl.Console.csproj", "{43A1356E-6155-428D-9749-EF4CFAE94B20}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Incontrl.Csl", "src\Incontrl.Csl\Incontrl.Csl.csproj", "{43A1356E-6155-428D-9749-EF4CFAE94B20}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E3E28094-5763-439B-A291-5F7B22B2AAC3}"
 EndProject

@@ -271,3 +271,4 @@ __pycache__/
 *.psm1
 /autorest
 
+/src/Incontrl.Console/appsettings.json
