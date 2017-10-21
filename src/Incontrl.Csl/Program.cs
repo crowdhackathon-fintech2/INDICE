@@ -51,12 +51,16 @@ namespace Incontrl.Console
                 var pendingInvoices = await subscriptionApi.Invoices().ListAsync(new ListOptions<InvoiceListFilter> { Filter = new InvoiceListFilter { Status = InvoiceStatus.Issued } });
                 // iii. try to match (exact match please ...) invoices & transactions -> invoice.PaymentCode = transaction.Description
                 pendingInvoices.Items.ToList().ForEach(invoice => {
-                    var matchedTransactions = savedTransactions.Where(_ => invoice.PaymentCode.Equals(_.Text));
-                    if(matchedTransactions.Count() > 0) {
+                    var matchedTransaction = savedTransactions.SingleOrDefault(_ => invoice.PaymentCode.Equals(_.Text));
+                    if(null != matchedTransaction) {
                         // a. add payments here ..
-                        //subscriptionApi.BankAccount(bankAccount.Id.Value).Transaction(matchedTransactions.First().).Payments().CreateAsync(new Payment { 
-                        // b. update the status now
-
+                        var payment = subscriptionApi.BankAccount(bankAccount.Id.Value).Transaction(matchedTransaction.Id.Value).Payments().CreateAsync(new Payment { InvoiceId = invoice.Id.Value, Amount = matchedTransaction.Amount }).Result;
+                        if(invoice.TotalPayable.Value == matchedTransaction.Amount) {
+                            // b. update the status now
+                            InvoiceStatus invoiceStatus = subscriptionApi.Invoice(invoice.Id.Value).Status().UpdateAsync(InvoiceStatus.Paid).Result;
+                            var url = $"http://api-vnext.incontrl.io/{invoice.PermaLink}";
+                            OpenBrowser(url);
+                        }
                     }
                 });
             }
