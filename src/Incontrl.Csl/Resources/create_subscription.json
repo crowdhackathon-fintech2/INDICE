@@ -18,19 +18,20 @@
     "paymentMethods": [
       {
         "code": "1",
-        "description": "GRXX 0XX0 0X00 0000 0X0X XXXX XXX",
-        "name": "Alpha Bank"
-      },
-      {
-        "code": "2",
-        "description": "GRXX 0XX0 0X00 0000 0X0X XXXX XXX",
-        "name": "Eurobank"
-      },
-      {
-        "code": "3",
         "description": "https://paypal.link?paymentcode={0}",
         "name": "Paypal",
         "type": "Online"
+      },
+      {
+        "code": "2",
+        "description": "https://ibankpay.nbg.gr/iBankPay/el/4b?paymentcode={0}",
+        "name": "iBank Pay",
+        "type": "Online"
+      },
+      {
+        "code": "3",
+        "description": "GRXX 0XX0 0X00 0000 0X0X XXXX XXX",
+        "name": "Eurobank"
       }
     ],
     "taxCode": "EL000000024",
