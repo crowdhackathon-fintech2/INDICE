@@ -25,6 +25,6 @@ namespace Incontrl.Provider.Concrete
     {
         public string Currency { get; set; }
 
-        public decimal Ammount { get; set; }
+        public decimal Amount { get; set; }
     }
 }

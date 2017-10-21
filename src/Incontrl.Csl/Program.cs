@@ -9,6 +9,7 @@ using Incontrl.Net.Models;
 using Incontrl.Net.Types;
 using Incontrl.Provider;
 using Microsoft.Extensions.Configuration;
+using System.Linq;
 
 namespace Incontrl.Console
 {
@@ -34,12 +35,30 @@ namespace Incontrl.Console
 
             //cool ... ensure subscription here ...
             subscriptionGuid = await EnsureSubscriptionData(subscriptionGuid, api);
+            var subscriptionApi = api.Subscription(subscriptionGuid);
 
-            var bankAccounts = api.Subscription(subscriptionGuid).BankAccounts().ListAsync().Result;
+            var bankAccounts = subscriptionApi.BankAccounts().ListAsync().Result;
             BankProviderFactory factory = new BankProviderFactory();
             foreach (var bankAccount in bankAccounts.Items) {
                 IBankProvider provider = factory.Get(bankAccount.Provider.Name, bankAccount.Provider.Settings);
                 var transactions = await provider.GetTransactionsAsync(new BankTransactionSearchDocument());
+                // i. save transactions to storage
+                List<BankTransaction> savedTransactions = new List<BankTransaction>();
+                foreach(var transaction in transactions) {
+                    savedTransactions.Add(await subscriptionApi.BankAccount(bankAccount.Id.Value).Transactions().CreateAsync(transaction));
+                }
+                // ii. get active invoices
+                var pendingInvoices = await subscriptionApi.Invoices().ListAsync(new ListOptions<InvoiceListFilter> { Filter = new InvoiceListFilter { Status = InvoiceStatus.Issued } });
+                // iii. try to match (exact match please ...) invoices & transactions -> invoice.PaymentCode = transaction.Description
+                pendingInvoices.Items.ToList().ForEach(invoice => {
+                    var matchedTransactions = savedTransactions.Where(_ => invoice.PaymentCode.Equals(_.Text));
+                    if(matchedTransactions.Count() > 0) {
+                        // a. add payments here ..
+                        //subscriptionApi.BankAccount(bankAccount.Id.Value).Transaction(matchedTransactions.First().).Payments().CreateAsync(new Payment { 
+                        // b. update the status now
+
+                    }
+                });
             }
 
             //i. get bank accounts by subscriptionId
@@ -81,60 +100,64 @@ namespace Incontrl.Console
                 });
             }
             // iii. ensure invoices in subscription
-            var product = await subscriptionApi.Products().CreateAsync(new CreateProductRequest {
-                Amount = 450,
-                Name = "My Precious",
-                Taxes = new List<Tax> {
+
+            var existingInvoices = await subscriptionApi.Invoices().ListAsync(new ListOptions<InvoiceListFilter> { Size = 3, Sort = "Date-" });
+            if(existingInvoices.Count == 0) {
+                var product = await subscriptionApi.Products().CreateAsync(new CreateProductRequest {
+                    Amount = 450,
+                    Name = "My Precious",
+                    Taxes = new List<Tax> {
                     new Tax { Name = "VAT", Rate = 0.24M, IsSalesTax = true }
                 }
-            });
-            var company = await subscriptionApi.Organisations().CreateAsync(new CreateOrganisationRequest {
-                Email = "support@indice.gr",
-                LegalName = "INDICE OE",
-                Name = "Indice",
-                LineOfBusiness = "Independent Software Vendor",
-                TaxCode = "GR99",
-                TaxOffice = "ΣΤ' ΑΘΗΝΩΝ",
-                Website = "http://www.indice.gr",
-                Address = new Address {
-                    CountryCode = "GR",
-                    Line1 = "22 Iakchou str.",
-                    City = "Athens",
-                    ZipCode = "11854"
-                }
-            }); 
-            await subscriptionApi.Invoices().CreateAsync(new CreateInvoiceRequest {
-                CurrencyCode = "EUR",
-                Date = DateTime.Now.AddSeconds(-4),
-                Status = InvoiceStatus.Issued,
-                Recipient = new Recipient { Organisation = company },
-                Lines = new List<InvoiceLine> {
+                });
+                var company = await subscriptionApi.Organisations().CreateAsync(new CreateOrganisationRequest {
+                    Email = "support@indice.gr",
+                    LegalName = "INDICE OE",
+                    Name = "Indice",
+                    LineOfBusiness = "Independent Software Vendor",
+                    TaxCode = "GR99",
+                    TaxOffice = "ΣΤ' ΑΘΗΝΩΝ",
+                    Website = "http://www.indice.gr",
+                    Address = new Address {
+                        CountryCode = "GR",
+                        Line1 = "22 Iakchou str.",
+                        City = "Athens",
+                        ZipCode = "11854"
+                    }
+                });
+                await subscriptionApi.Invoices().CreateAsync(new CreateInvoiceRequest {
+                    CurrencyCode = "EUR",
+                    Date = DateTime.Now.AddSeconds(-4),
+                    Status = InvoiceStatus.Issued,
+                    Recipient = new Recipient { Organisation = company },
+                    Lines = new List<InvoiceLine> {
                     new InvoiceLine { Description = "This is a Nice expensive item", DiscountRate = 0.05, UnitAmount = 450, Product = product, Taxes = product.Taxes }
                 }
-            });
-            await subscriptionApi.Invoices().CreateAsync(new CreateInvoiceRequest {
-                CurrencyCode = "EUR",
-                Date = DateTime.Now.AddSeconds(-2),
-                Status = InvoiceStatus.Issued,
-                Recipient = new Recipient { Organisation = company },
-                Lines = new List<InvoiceLine> {
+                });
+                await subscriptionApi.Invoices().CreateAsync(new CreateInvoiceRequest {
+                    CurrencyCode = "EUR",
+                    Date = DateTime.Now.AddSeconds(-2),
+                    Status = InvoiceStatus.Issued,
+                    Recipient = new Recipient { Organisation = company },
+                    Lines = new List<InvoiceLine> {
                     new InvoiceLine { Description = "This is a Nice expensive item 2", DiscountRate = 0.05, UnitAmount = 450, Product = product, Taxes = product.Taxes, Quantity = 2 }
                 }
-            });
-            var incoive = await subscriptionApi.Invoices().CreateAsync(new CreateInvoiceRequest {
-                CurrencyCode = "EUR",
-                Date = DateTime.Now,
-                Status = InvoiceStatus.Issued,
-                Recipient = new Recipient { Organisation = company },
-                Lines = new List<InvoiceLine> {
+                });
+                var incoive = await subscriptionApi.Invoices().CreateAsync(new CreateInvoiceRequest {
+                    CurrencyCode = "EUR",
+                    Date = DateTime.Now,
+                    Status = InvoiceStatus.Issued,
+                    Recipient = new Recipient { Organisation = company },
+                    Lines = new List<InvoiceLine> {
                     new InvoiceLine { Description = "This is a Nice expensive item 3", DiscountRate = 0.05, UnitAmount = 450, Product = product, Taxes = product.Taxes, Quantity = 0.5 }
                 }
-            });
-            
-            var invoices = await subscriptionApi.Invoices().ListAsync(new ListOptions<InvoiceListFilter> { Size = 3, Sort = "Date-" });
-            foreach (var invoice in invoices.Items) {
-                var url = $"http://api-vnext.incontrl.io/{invoice.PermaLink}";
-                OpenBrowser(url);
+                });
+
+                var invoices = await subscriptionApi.Invoices().ListAsync(new ListOptions<InvoiceListFilter> { Size = 3, Sort = "Date-" });
+                foreach (var invoice in invoices.Items) {
+                    var url = $"http://api-vnext.incontrl.io/{invoice.PermaLink}";
+                    OpenBrowser(url);
+                }
             }
 
             return subscription.Id.Value;

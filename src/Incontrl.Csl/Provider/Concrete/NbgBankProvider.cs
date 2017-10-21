@@ -65,7 +65,8 @@ namespace Incontrl.Provider.Concrete
 
         public async Task<IEnumerable<BankTransaction>> GetTransactionsAsync(BankTransactionSearchDocument searchDoc) {           
             var response = await _http.GetAsync($"accounts/{account_id}/transactions");
-            var transactions = JsonConvert.DeserializeObject<IEnumerable<Transaction>>(await response.Content.ReadAsStringAsync());
+            string content = await response.Content.ReadAsStringAsync();
+            var transactions = JsonConvert.DeserializeObject<IEnumerable<Transaction>>(content);
             return MapToBankTransactions(transactions);
         }
 
@@ -73,10 +74,12 @@ namespace Incontrl.Provider.Concrete
             List<BankTransaction> bankTransactions = new List<BankTransaction>();
             foreach(Transaction transaction in transactions) {
                 BankTransaction bankTransaction = new BankTransaction();
-                bankTransaction.Amount = Math.Abs(transaction.Details.Value.Ammount);
-                bankTransaction.Type = transaction.Details.Value.Ammount > 0 ? BankTransactionType.Credit : BankTransactionType.Debit;
+                bankTransaction.Amount = Math.Abs(transaction.Details.Value.Amount);
+                bankTransaction.Type = transaction.Details.Value.Amount > 0 ? BankTransactionType.Credit : BankTransactionType.Debit;
                 bankTransaction.Date = transaction.Details.Completed;
                 bankTransaction.Number = transaction.Id;
+                bankTransaction.Hash = Guid.Parse(transaction.Id).ToByteArray();
+                bankTransaction.Text = transaction.Details.Description;
                 bankTransactions.Add(bankTransaction);                
             }
             return bankTransactions;
