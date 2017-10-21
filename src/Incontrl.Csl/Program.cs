@@ -83,7 +83,7 @@ namespace Incontrl.Console
                 Amount = 450,
                 Name = "My Precious",
                 Taxes = new List<Tax> {
-                    new Tax { Name = "VAT", Rate = 0.24M }
+                    new Tax { Name = "VAT", Rate = 0.24M, IsSalesTax = true }
                 }
             });
             var company = await subscriptionApi.Organisations().CreateAsync(new CreateOrganisationRequest {
