@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Incontrl.Net;
 using Incontrl.Net.Models;
@@ -131,10 +133,30 @@ namespace Incontrl.Console
             
             var invoices = await subscriptionApi.Invoices().ListAsync(new ListOptions<InvoiceListFilter> { Size = 3, Sort = "Date-" });
             foreach (var invoice in invoices.Items) {
-                var cmd = $"start microsoft-edge:http://api-vnext.incontrl.io/{invoice.PermaLink}";
+                var url = $"http://api-vnext.incontrl.io/{invoice.PermaLink}";
+                OpenBrowser(url);
             }
 
             return subscription.Id.Value;
+        }
+
+
+        public static void OpenBrowser(string url) {
+            try {
+                Process.Start(url);
+            } catch {
+                // hack because of this: https://github.com/dotnet/corefx/issues/10361
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+                    url = url.Replace("&", "^&");
+                    Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
+                } else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
+                    Process.Start("xdg-open", url);
+                } else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
+                    Process.Start("open", url);
+                } else {
+                    throw;
+                }
+            }
         }
     }
 }
