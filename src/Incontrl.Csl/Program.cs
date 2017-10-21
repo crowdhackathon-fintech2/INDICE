@@ -79,6 +79,8 @@ namespace Incontrl.Console
             if (Guid.Empty.Equals(subscriptionGuid)) {
                 var subscriptionJson = File.ReadAllText(@"Resources\create_subscription.json");
                 var subscriptionRequest = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateSubscriptionRequest>(subscriptionJson);
+                subscriptionRequest.Company.LegalName += DateTime.Now.Second;
+                subscriptionRequest.Company.Name += DateTime.Now.Second;
                 subscription = await api.Subscriptions().CreateAsync(subscriptionRequest);
             } else {
                 subscription = await api.Subscription(subscriptionGuid).GetAsync();
