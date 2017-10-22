@@ -17,4 +17,9 @@ integrate with [NBG Open Bank API](https://apis.nbg.gr/public/) and owr own [inc
   - For each imported transaction run reconciliation
   - Get matching invoices by payment code
   - Create link (payment) between invoice and transaction
+  - Add payment options to (mock) payments through the invoice match
  
+## Tech 
+- [dotnet core](https://dot.net) 
+- Opensource [incontrol.io .Net SDK](https://github.com/indice-co/Incontrl.Net) on github
+- ibank [open bank apis](http://developer.nbg.gr) (PSD2) 
