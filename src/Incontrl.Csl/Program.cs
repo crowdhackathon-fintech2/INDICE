@@ -36,44 +36,47 @@ namespace Incontrl
             //var subscriptionApi = api.Subscription(subscriptionGuid);
 
             var bankAccounts = api.Subscription(subscriptionGuid).BankAccounts().ListAsync().Result;
-            BankProviderFactory factory = new BankProviderFactory();
+            var factory = new BankProviderFactory();
             foreach (var bankAccount in bankAccounts.Items) {
                 IBankProvider provider = factory.Get(bankAccount.Provider.Name, bankAccount.Provider.Settings);
                 var transactions = await provider.GetTransactionsAsync(new BankTransactionSearchDocument());
                 // i. save transactions to storage
-                List<BankTransaction> savedTransactions = new List<BankTransaction>();
+                var savedTransactions = new List<BankTransaction>();
                 foreach (var transaction in transactions) {
-                    savedTransactions.Add(await api.Subscription(subscriptionGuid).BankAccount(bankAccount.Id.Value).Transactions().CreateAsync(transaction));
-                }
-                // ii. get active invoices
-                var pendingInvoices = await api.Subscription(subscriptionGuid).Invoices().ListAsync(new ListOptions<InvoiceListFilter> { Filter = new InvoiceListFilter { Status = InvoiceStatus.Issued } });
-                // iii. try to match (exact match please ...) invoices & transactions -> invoice.PaymentCode = transaction.Description
-                foreach (var invoice in pendingInvoices.Items.ToList()) {
-                    var matchedTransaction = savedTransactions.SingleOrDefault(_ => invoice.PaymentCode.Equals(_.Text));
-                    if (null != matchedTransaction) {
-                        // a. add payments here ..
-                        var payment = await api.Subscription(subscriptionGuid).BankAccount(bankAccount.Id.Value).Transaction(matchedTransaction.Id.Value).Payments().CreateAsync(new Payment { InvoiceId = invoice.Id.Value, Amount = matchedTransaction.Amount });
+                    var savedTrans = await api.Subscription(subscriptionGuid).BankAccount(bankAccount.Id.Value).Transactions().CreateAsync(transaction);
 
-                        if (invoice.TotalPayable.Value == matchedTransaction.Amount) {
-                            // b. update the status now
-                            InvoiceStatus invoiceStatus = await api.Subscription(subscriptionGuid).Invoice(invoice.Id.Value).Status().UpdateAsync(InvoiceStatus.Paid);
-                            var url = $"http://api-vnext.incontrl.io/{invoice.PermaLink}";
-                            OpenBrowser(url);
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine($"We found a match !!! {payment.Amount:N2}");
+                    // ii. get active invoices
+                    var pendingInvoices = await api.Subscription(subscriptionGuid).Invoices().ListAsync(new ListOptions<InvoiceListFilter> { Filter = new InvoiceListFilter { Status = InvoiceStatus.Issued } });
+
+                    foreach (var invoice in pendingInvoices.Items.ToList()) {
+                        // iii. try to match (exact match please ...) invoices & transactions -> invoice.PaymentCode = transaction.Description
+
+                        if (invoice.PaymentCode.Trim().Equals(savedTrans.Text.Trim())) {
+                            // a. add payments here ..
+                            var payment = await api.Subscription(subscriptionGuid).BankAccount(bankAccount.Id.Value).Transaction(savedTrans.Id.Value).Payments().CreateAsync(new Payment { InvoiceId = invoice.Id.Value, Amount = savedTrans.Amount });
+
+                            if (invoice.TotalPayable.Value == savedTrans.Amount) {
+                                // b. update the status now
+                                InvoiceStatus invoiceStatus = await api.Subscription(subscriptionGuid).Invoice(invoice.Id.Value).Status().UpdateAsync(InvoiceStatus.Paid);
+                                var url = $"http://api-vnext.incontrl.io/{invoice.PermaLink}";
+                                OpenBrowser(url);
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.WriteLine($"We found a match !!! {payment.Amount:N2}");
+                            }
                         }
                     }
+
                 }
+
+                //i. get bank accounts by subscriptionId
+                //ii. create provider concrete class through BankProviderFactory
+                //iii. get bank transactions by bank account
+                //iv. store bank transactions to our storage
+                //v. get invoices by subscriptionId
+                //vi. matching .....
+
+                Console.ReadKey();
             }
-
-            //i. get bank accounts by subscriptionId
-            //ii. create provider concrete class through BankProviderFactory
-            //iii. get bank transactions by bank account
-            //iv. store bank transactions to our storage
-            //v. get invoices by subscriptionId
-            //vi. matching .....
-
-            Console.ReadKey();
         }
 
         public static async Task<Guid> EnsureSubscriptionData(Guid subscriptionGuid, IncontrlApi api) {
@@ -135,6 +138,7 @@ namespace Incontrl
                     }
                 });
                 await subscriptionApi.Invoices().CreateAsync(new CreateInvoiceRequest {
+                    PaymentCode = "171021000001",
                     CurrencyCode = "EUR",
                     Date = DateTime.Now.AddSeconds(-4),
                     Status = InvoiceStatus.Issued,
@@ -144,6 +148,7 @@ namespace Incontrl
                 }
                 });
                 await subscriptionApi.Invoices().CreateAsync(new CreateInvoiceRequest {
+                    PaymentCode = "171021000001",
                     CurrencyCode = "EUR",
                     Date = DateTime.Now.AddSeconds(-2),
                     Status = InvoiceStatus.Issued,
@@ -153,6 +158,7 @@ namespace Incontrl
                 }
                 });
                 var incoive = await subscriptionApi.Invoices().CreateAsync(new CreateInvoiceRequest {
+                    PaymentCode = "171021000001",
                     CurrencyCode = "EUR",
                     Date = DateTime.Now,
                     Status = InvoiceStatus.Issued,
