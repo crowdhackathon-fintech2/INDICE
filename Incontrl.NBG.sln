@@ -8,6 +8,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{82413185-5
 		..\..\..\..\Downloads\inControl - PSD2 powered.pptx = ..\..\..\..\Downloads\inControl - PSD2 powered.pptx
 		LICENSE = LICENSE
 		README.md = README.md
+		..\..\..\..\Downloads\ΕΝΤΥΠΟ ΠΕΡΙΓΡΑΦΗΣ ΕΦΑΡΜΟΓΗΣ crowdhackathon fintech2_v2.docx = ..\..\..\..\Downloads\ΕΝΤΥΠΟ ΠΕΡΙΓΡΑΦΗΣ ΕΦΑΡΜΟΓΗΣ crowdhackathon fintech2_v2.docx
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Incontrl.Csl", "src\Incontrl.Csl\Incontrl.Csl.csproj", "{43A1356E-6155-428D-9749-EF4CFAE94B20}"
