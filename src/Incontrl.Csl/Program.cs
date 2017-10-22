@@ -15,54 +15,53 @@ namespace Incontrl.Console
 {
     class Program
     {
-        public static async Task Main(string[] args)
-        {
+        public static async Task Main(string[] args) {
             var builder = new ConfigurationBuilder()
                    .SetBasePath(Directory.GetCurrentDirectory())
                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                    .AddEnvironmentVariables();
 
             var configuration = builder.Build();
-
             var clientId = configuration["Client:ClientId"];
             var clientSecret = configuration["Client:ClientSecret"];
             var baseApiAddress = configuration["BaseApiAddress"]; //http://api-vnext.incontrl.io
             var subscriptionId = configuration["SubscriptionId"];
-            Guid subscriptionGuid = string.IsNullOrWhiteSpace(subscriptionId) ? Guid.Empty : new Guid(subscriptionId);
+            var subscriptionGuid = string.IsNullOrWhiteSpace(subscriptionId) ? Guid.Empty : new Guid(subscriptionId);
             var api = new IncontrlApi(clientId, clientSecret);
             api.Configure(baseApiAddress);
             api.LoginAsync(true).Wait();
 
             //cool ... ensure subscription here ...
             subscriptionGuid = await EnsureSubscriptionData(subscriptionGuid, api);
-            var subscriptionApi = api.Subscription(subscriptionGuid);
+            //var subscriptionApi = api.Subscription(subscriptionGuid);
 
-            var bankAccounts = subscriptionApi.BankAccounts().ListAsync().Result;
+            var bankAccounts = api.Subscription(subscriptionGuid).BankAccounts().ListAsync().Result;
             BankProviderFactory factory = new BankProviderFactory();
             foreach (var bankAccount in bankAccounts.Items) {
                 IBankProvider provider = factory.Get(bankAccount.Provider.Name, bankAccount.Provider.Settings);
                 var transactions = await provider.GetTransactionsAsync(new BankTransactionSearchDocument());
                 // i. save transactions to storage
                 List<BankTransaction> savedTransactions = new List<BankTransaction>();
-                foreach(var transaction in transactions) {
-                    savedTransactions.Add(await subscriptionApi.BankAccount(bankAccount.Id.Value).Transactions().CreateAsync(transaction));
+                foreach (var transaction in transactions) {
+                    savedTransactions.Add(await api.Subscription(subscriptionGuid).BankAccount(bankAccount.Id.Value).Transactions().CreateAsync(transaction));
                 }
                 // ii. get active invoices
-                var pendingInvoices = await subscriptionApi.Invoices().ListAsync(new ListOptions<InvoiceListFilter> { Filter = new InvoiceListFilter { Status = InvoiceStatus.Issued } });
+                var pendingInvoices = await api.Subscription(subscriptionGuid).Invoices().ListAsync(new ListOptions<InvoiceListFilter> { Filter = new InvoiceListFilter { Status = InvoiceStatus.Issued } });
                 // iii. try to match (exact match please ...) invoices & transactions -> invoice.PaymentCode = transaction.Description
-                pendingInvoices.Items.ToList().ForEach(invoice => {
+                foreach (var invoice in pendingInvoices.Items.ToList()) {
                     var matchedTransaction = savedTransactions.SingleOrDefault(_ => invoice.PaymentCode.Equals(_.Text));
-                    if(null != matchedTransaction) {
+                    if (null != matchedTransaction) {
                         // a. add payments here ..
-                        var payment = subscriptionApi.BankAccount(bankAccount.Id.Value).Transaction(matchedTransaction.Id.Value).Payments().CreateAsync(new Payment { InvoiceId = invoice.Id.Value, Amount = matchedTransaction.Amount }).Result;
-                        if(invoice.TotalPayable.Value == matchedTransaction.Amount) {
+                        var payment = await api.Subscription(subscriptionGuid).BankAccount(bankAccount.Id.Value).Transaction(matchedTransaction.Id.Value).Payments().CreateAsync(new Payment { InvoiceId = invoice.Id.Value, Amount = matchedTransaction.Amount });
+
+                        if (invoice.TotalPayable.Value == matchedTransaction.Amount) {
                             // b. update the status now
-                            InvoiceStatus invoiceStatus = subscriptionApi.Invoice(invoice.Id.Value).Status().UpdateAsync(InvoiceStatus.Paid).Result;
+                            InvoiceStatus invoiceStatus = await api.Subscription(subscriptionGuid).Invoice(invoice.Id.Value).Status().UpdateAsync(InvoiceStatus.Paid);
                             var url = $"http://api-vnext.incontrl.io/{invoice.PermaLink}";
                             OpenBrowser(url);
                         }
                     }
-                });
+                }
             }
 
             //i. get bank accounts by subscriptionId
@@ -108,7 +107,7 @@ namespace Incontrl.Console
             // iii. ensure invoices in subscription
 
             var existingInvoices = await subscriptionApi.Invoices().ListAsync(new ListOptions<InvoiceListFilter> { Size = 3, Sort = "Date-" });
-            if(existingInvoices.Count == 0) {
+            if (existingInvoices.Count == 0) {
                 var product = await subscriptionApi.Products().CreateAsync(new CreateProductRequest {
                     Amount = 450,
                     Name = "My Precious",
