@@ -5,11 +5,12 @@ VisualStudioVersion = 15.0.27004.2005
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{82413185-53CE-4D57-942B-81AC33771ED7}"
 	ProjectSection(SolutionItems) = preProject
+		..\..\..\..\Downloads\inControl - PSD2 powered.pptx = ..\..\..\..\Downloads\inControl - PSD2 powered.pptx
 		LICENSE = LICENSE
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Incontrl.Csl", "src\Incontrl.Csl\Incontrl.Csl.csproj", "{43A1356E-6155-428D-9749-EF4CFAE94B20}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Incontrl.Csl", "src\Incontrl.Csl\Incontrl.Csl.csproj", "{43A1356E-6155-428D-9749-EF4CFAE94B20}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E3E28094-5763-439B-A291-5F7B22B2AAC3}"
 EndProject
