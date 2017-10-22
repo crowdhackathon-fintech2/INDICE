@@ -11,7 +11,7 @@ using Incontrl.Provider;
 using Microsoft.Extensions.Configuration;
 using System.Linq;
 
-namespace Incontrl.Console
+namespace Incontrl
 {
     class Program
     {
@@ -59,6 +59,8 @@ namespace Incontrl.Console
                             InvoiceStatus invoiceStatus = await api.Subscription(subscriptionGuid).Invoice(invoice.Id.Value).Status().UpdateAsync(InvoiceStatus.Paid);
                             var url = $"http://api-vnext.incontrl.io/{invoice.PermaLink}";
                             OpenBrowser(url);
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"We found a match !!! {payment.Amount:N2}");
                         }
                     }
                 }
@@ -70,6 +72,8 @@ namespace Incontrl.Console
             //iv. store bank transactions to our storage
             //v. get invoices by subscriptionId
             //vi. matching .....
+
+            Console.ReadKey();
         }
 
         public static async Task<Guid> EnsureSubscriptionData(Guid subscriptionGuid, IncontrlApi api) {
